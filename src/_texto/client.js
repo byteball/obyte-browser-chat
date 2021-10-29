@@ -1,6 +1,5 @@
 import { publicKeyCreate } from 'secp256k1';
-import { getDeviceMessageHashToSign, getDeviceAddress } from '@obyte/ocore/object_hash';
-import { fromWif, decryptPackage, createObjDeviceKey, createEncryptedPackage, sign } from './utils';
+import { fromWif, decryptPackage, createObjDeviceKey, createEncryptedPackage, sign, getDeviceMessageHashToSign, getDeviceAddress } from './utils';
 export default class Client {
   events = {
     ready: [],

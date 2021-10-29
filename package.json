@@ -1,12 +1,13 @@
 {
   "name": "obyte-browser-chat",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Library for interacting with Obyte chat",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "dependencies": {
-    "@obyte/ocore": "0.2.93",
+    "lodash": "^4.17.21",
     "secp256k1": "^3.7.1",
+    "thirty-two": "^1.0.2",
     "wif": "^2.0.6"
   },
   "scripts": {

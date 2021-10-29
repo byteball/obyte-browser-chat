@@ -1,6 +1,10 @@
 import wif from 'wif';
 import { publicKeyCreate, sign as ecdsaSign, verify as ecdsaVerify } from 'secp256k1';
 import { randomBytes, createHash, createECDH, createCipheriv, createDecipheriv } from 'crypto';
+import { clone } from "lodash";
+import chash from "./chash";
+
+var STRING_JOIN_CHAR = "\x00";
 
 export function deriveSharedSecret(ecdh, peerB64Pubkey) {
   const sharedSecretSrc = ecdh.computeSecret(peerB64Pubkey, 'base64');
@@ -127,4 +131,73 @@ export function verify(hash, b64Sig, b64Pubkey) {
 export const generatePaymentMessage = (objPaymentRequest) => {
   const paymentJson = JSON.stringify(objPaymentRequest);
   return Buffer.from(paymentJson).toString('base64');
+}
+
+function cleanNullsDeep(obj) {
+  Object.keys(obj).forEach(function (key) {
+    if (obj[key] === null)
+      delete obj[key];
+    else if (typeof obj[key] === 'object') // array included
+      cleanNullsDeep(obj[key]);
+  });
+}
+
+export function getDeviceMessageHashToSign(objDeviceMessage) {
+  var objNakedDeviceMessage = clone(objDeviceMessage);
+  delete objNakedDeviceMessage.signature;
+  cleanNullsDeep(objNakedDeviceMessage); // device messages have free format and we can't guarantee absence of malicious fields
+  return createHash("sha256").update(getSourceString(objNakedDeviceMessage), "utf8").digest();
+}
+
+export function getDeviceAddress(b64_pubkey) {
+  return ('0' + getChash160(b64_pubkey));
+}
+
+function getChash160(obj) {
+  return chash.getChash160(getSourceString(obj));
+}
+
+export function getSourceString(obj) {
+  var arrComponents = [];
+  function extractComponents(variable) {
+    if (variable === null)
+      throw Error("null value in " + JSON.stringify(obj));
+    switch (typeof variable) {
+      case "string":
+        arrComponents.push("s", variable);
+        break;
+      case "number":
+        arrComponents.push("n", variable.toString());
+        break;
+      case "boolean":
+        arrComponents.push("b", variable.toString());
+        break;
+      case "object":
+        if (Array.isArray(variable)) {
+          if (variable.length === 0)
+            throw Error("empty array in " + JSON.stringify(obj));
+          arrComponents.push('[');
+          for (var i = 0; i < variable.length; i++)
+            extractComponents(variable[i]);
+          arrComponents.push(']');
+        }
+        else {
+          var keys = Object.keys(variable).sort();
+          if (keys.length === 0)
+            throw Error("empty object in " + JSON.stringify(obj));
+          keys.forEach(function (key) {
+            if (typeof variable[key] === "undefined")
+              throw Error("undefined at " + key + " of " + JSON.stringify(obj));
+            arrComponents.push(key);
+            extractComponents(variable[key]);
+          });
+        }
+        break;
+      default:
+        throw Error("hash: unknown type=" + (typeof variable) + " of " + variable + ", object: " + JSON.stringify(obj));
+    }
+  }
+
+  extractComponents(obj);
+  return arrComponents.join(STRING_JOIN_CHAR);
 }
