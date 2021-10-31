@@ -4,6 +4,7 @@ import { randomBytes } from 'crypto';
 
 export default class {
   #invite;
+  #ready
   #messages;
   #pairingCallback;
   #messageCallback;
@@ -23,6 +24,7 @@ export default class {
     this.#LOCALSTORAGE_KEY = `${localStorageKey}-${testnet ? "testnet" : "livenet"}`;
     this.#messages = [];
     this.#invite = null;
+    this.#ready = false;
     this.client = client;
     this.name = name;
     this.testnet = testnet;
@@ -63,6 +65,7 @@ export default class {
     this.#invite = `obyte${this.testnet ? "-tn" : ""}:${this.textoInstants.devicePubKey}@obyte.org/bb${this.testnet ? "-test" : ""}`
 
     this.textoInstants.on('ready', () => {
+      this.#ready = true;
       this.#readyCallback && this.#readyCallback(invite);
     });
 
@@ -76,11 +79,18 @@ export default class {
 
     this.textoInstants.on('message', msg => {
       this.#messageCallback && this.#messageCallback(msg);
-    })
+    });
 
     this.client.onConnect(() => {
       this.#messages = [];
-    })
+    });
+
+    setTimeout(() => {
+      if (!this.#ready) {
+        this.client.justsaying("hub/repeat_challenge");
+      }
+    }, 500);
+
   }
 
   /**

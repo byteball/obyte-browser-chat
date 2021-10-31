@@ -1,6 +1,6 @@
 {
   "name": "obyte-browser-chat",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Library for interacting with Obyte chat",
   "main": "build/index.js",
   "types": "build/index.d.ts",
