@@ -20,7 +20,7 @@ export default class {
    * @param {boolean} [testnet=false] - true for test network
    * @param {string} [localStorageKey=chat]
    */
-  constructor(client, name = "Chat", testnet = false, localStorageKey = "chat") {
+  constructor({client, name = "Chat", testnet = false, localStorageKey = "chat"}) {
     this.#LOCALSTORAGE_KEY = `${localStorageKey}-${testnet ? "testnet" : "livenet"}`;
     this.#messages = [];
     this.#invite = null;
